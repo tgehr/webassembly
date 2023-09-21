@@ -142,7 +142,7 @@ void free(ubyte* ptr) @nogc @trusted {
 }
 
 
-ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @trusted {
+ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow{
 	// lol bumping that pointer
 	if(nextFree is null) {
 		nextFree = &__heap_base; // seems to be 75312
@@ -189,7 +189,7 @@ ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @trust
 }
 
 
-ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = __LINE__) @trusted
+ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow
 {
 	auto ret = malloc(count*size,file,line);
 	ret[0..$] = 0;
@@ -197,7 +197,7 @@ ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = 
 }
 
 
-ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted {
+ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow {
 	if(ptr is null)
 		return malloc(newSize, file, line);
 
@@ -245,7 +245,7 @@ ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line 
 *  If the ptr isn't owned by the runtime, it will completely malloc the data (instead of realloc)
 *   and copy its old content.
 */
-ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted
+ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow
 {
     if(ptr is null)
         return malloc(newSize, file, line);

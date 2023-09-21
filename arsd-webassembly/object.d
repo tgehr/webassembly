@@ -14,9 +14,9 @@ alias noreturn = typeof(*null);
 alias string = immutable(char)[];
 alias wstring = immutable(wchar)[];
 alias dstring = immutable(dchar)[];
-alias size_t = uint;
-alias ptrdiff_t = int;
-
+alias size_t = ulong;
+alias ptrdiff_t = long;
+alias hash_t = size_t;
 
 // then the entry point just for convenience so main works.
 extern(C) int _Dmain(string[] args);
@@ -32,6 +32,21 @@ template _arrayOp(Args...)
     alias _arrayOp = arrayOp!Args;
 }
 
+@property size_t capacity(T)(T[] arr) pure nothrow @trusted
+{
+	//return _d_arraysetcapacity(typeid(T[]), 0, cast(void[]*)&arr);
+	return 0;
+}
+/+size_t reserve(T)(ref T[] arr, size_t newcapacity) pure nothrow @trusted
+{
+	/+if (__ctfe)
+        return newcapacity;
+    else
+        return _d_arraysetcapacity(typeid(T[]), newcapacity, cast(void[]*)&arr);+/
+	return newcapacity;
+}+/
+
+
 extern(C) void _d_array_slice_copy(void* dst, size_t dstlen, void* src, size_t srclen, size_t elemsz) {
 	auto d = cast(ubyte*) dst;
 	auto s = cast(ubyte*) src;
@@ -46,7 +61,7 @@ extern(C) void _d_array_slice_copy(void* dst, size_t dstlen, void* src, size_t s
 
 }
 
-void reserve(T)(ref T[] arr, size_t length) @trusted {
+void reserve(T)(ref T[] arr, size_t length) pure nothrow @trusted {
 	arr = (cast(T*) (malloc(length * T.sizeof).ptr))[0 .. 0];
 }
 
@@ -143,7 +158,7 @@ void __switch_error(string file, size_t line) @trusted @nogc pure
 	_d_assert_msg("final switch error",file, line);
 }
 
-bool __equals(T1, T2)(scope const T1[] lhs, scope const T2[] rhs) {
+bool __equals(T1, T2)(scope T1[] lhs, scope T2[] rhs) {
 	if (lhs.length != rhs.length) {
 		return false;
 	}
@@ -1239,25 +1254,37 @@ void assumeUniqueReference(T)(T[] arr) {
 	block.flags |= AllocatedBlock.Flags.unique;
 }
 
+private alias Unqual(T)=T;
+private alias Unqual(T:const(T))=T;
+private alias Unqual(T:immutable(T))=T;
+private alias Unqual(T:inout(T))=T;
+private alias Unqual(T:const(inout(T)))=T;
+
 template _d_arraysetlengthTImpl(Tarr : T[], T) {
-	size_t _d_arraysetlengthT(return scope ref Tarr arr, size_t newlength) @trusted {
+	size_t _d_arraysetlengthT()(return scope ref Tarr arr, size_t newlength) @trusted {
 		auto orig = arr;
 
 		if(newlength <= arr.length) {
 			arr = arr[0 ..newlength];
 		} else {
-			auto ptr = cast(T*) realloc(cast(ubyte[])arr, newlength * T.sizeof);
-			arr = ptr[0 .. newlength];
+			auto ptr = cast(Unqual!T*) realloc(cast(ubyte[])arr, newlength * T.sizeof);
+			auto narr = ptr[0 .. newlength];
 			if(orig !is null) {
-				arr[0 .. orig.length] = orig[];
+				narr[0 .. orig.length] = orig[];
 			}
+			arr = cast(T[]) narr;
 		}
 
 		return newlength;
 	}
 }
 
-extern (C) byte[] _d_arrayappendcTX(const TypeInfo ti, ref byte[] px, size_t n) @trusted {
+public import core.internal.array.arrayassign;
+
+public import core.internal.array.appending:_d_arrayappendcTXImpl;
+public import core.internal.array.appending:_d_arrayappendT;
+
+extern (C) byte[] _d_arrayappendcTX(const TypeInfo ti, ref byte[] px, size_t n) @trusted pure nothrow{
 	auto elemSize = ti.next.size;
 	auto newLength = n + px.length;
 	auto newSize = newLength * elemSize;
@@ -1278,7 +1305,6 @@ extern (C) byte[] _d_arrayappendcTX(const TypeInfo ti, ref byte[] px, size_t n) 
 	(cast(void **)(&px))[1] = ns.ptr;
 	return px;
 }
-
 
 version(inline_concat)
 extern(C) void[] _d_arraycatnTX(const TypeInfo ti, scope byte[][] arrs) @trusted
@@ -1370,7 +1396,7 @@ extern (C) void[] _d_arrayappendcd(ref byte[] x, dchar c)
 
 
 
-alias AliasSeq(T...) = T;
+private alias AliasSeq(T...) = T;
 static foreach(type; AliasSeq!(byte, char, dchar, double, float, int, long, short, ubyte, uint, ulong, ushort, void, wchar)) {
 	mixin(q{
 		class TypeInfo_}~type.mangleof~q{ : TypeInfo {
@@ -1816,7 +1842,7 @@ V[K] dup(T : V[K], K, V)(T* aa)
     return (*aa).dup;
 }
 
-T[] dup(T)(scope T[] array) pure nothrow @trusted if (__traits(isPOD, T) && !is(const(T) : T))
+T[] dup(T)(scope T[] array) if (/+__traits(isPOD, T) &&+/ !is(const(T) : T))
 {
 	T[] result;
 	foreach(ref e; array) {
@@ -1827,7 +1853,7 @@ T[] dup(T)(scope T[] array) pure nothrow @trusted if (__traits(isPOD, T) && !is(
 
 
 
-T[] dup(T)(scope const(T)[] array) pure nothrow @trusted if (__traits(isPOD, T))
+T[] dup(T)(scope const(T)[] array) //if (__traits(isPOD, T))
 {
 	T[] result;
 	foreach(ref e; array) {
@@ -1836,7 +1862,7 @@ T[] dup(T)(scope const(T)[] array) pure nothrow @trusted if (__traits(isPOD, T))
 	return result;
 }
 
-immutable(T)[] idup(T)(scope const(T)[] array) pure nothrow @trusted
+immutable(T)[] idup(T)(scope const(T)[] array)
 {
 	immutable(T)[] result;
 	foreach(ref e; array) {
@@ -2028,4 +2054,9 @@ class Exception : Throwable
 }
 
 
-import core.internal.hash;
+public import core.internal.hash;
+
+template imported(string moduleName)
+{
+    mixin("import imported = " ~ moduleName ~ ";");
+}
