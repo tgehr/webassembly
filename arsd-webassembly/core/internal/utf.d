@@ -23,7 +23,7 @@ module core.internal.utf;
 
 extern (C) void onUnicodeError( string msg, size_t idx, string file = __FILE__, size_t line = __LINE__ ) @trusted
 {
-    _d_assert_msg("onUnicodeError: "~msg, file, line);
+	_d_assert_msg("onUnicodeError: "~msg, file, cast(uint)line);
 }
 
 /*******************************

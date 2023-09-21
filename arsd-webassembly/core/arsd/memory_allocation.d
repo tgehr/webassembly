@@ -143,6 +143,10 @@ void free(ubyte* ptr) @nogc @trusted {
 
 
 ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow{
+	return (cast(ubyte[] function(size_t sz, string file, size_t line)@trusted pure nothrow)&mallocImpl)(sz,file,line);
+}
+
+ubyte[] mallocImpl(size_t sz, string file = __FILE__, size_t line = __LINE__){
 	// lol bumping that pointer
 	if(nextFree is null) {
 		nextFree = &__heap_base; // seems to be 75312
@@ -196,8 +200,10 @@ ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = 
 	return ret;
 }
 
-
 ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow {
+	return (cast(ubyte[] function(ubyte* ptr, size_t newSize, string file, size_t line)@trusted pure nothrow)&reallocImpl)(ptr,newSize,file,line);
+}
+ubyte[] reallocImpl(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted {
 	if(ptr is null)
 		return malloc(newSize, file, line);
 
@@ -245,7 +251,10 @@ ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line 
 *  If the ptr isn't owned by the runtime, it will completely malloc the data (instead of realloc)
 *   and copy its old content.
 */
-ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow
+ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow{
+	return (cast(ubyte[] function(ubyte[] ptr, size_t newSize, string file, size_t line)@trusted pure nothrow)&reallocImpl2)(ptr,newSize,file,line);
+}
+ubyte[] reallocImpl2(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__)
 {
     if(ptr is null)
         return malloc(newSize, file, line);
@@ -256,5 +265,5 @@ ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line
         ret[0..ptr.length] = ptr[]; //Don't clear ptr memory as it can't be clear.
         return ret;
     }
-    else return realloc(ptr.ptr, newSize, file, line);
+	else return realloc(ptr.ptr, newSize, file, line);
 }

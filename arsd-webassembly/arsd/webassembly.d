@@ -6,7 +6,7 @@ module arsd.webassembly;
 struct AcquireArgument {
 	int type;
 	const(void)* ptr;
-	int length;
+	uint length;
 }
 
 // the basic bridge functions defined in webassembly-core.js {
@@ -54,23 +54,23 @@ template eval(T = void) {
 			static if(is(typeof(arg) : const int)) {
 				aa[idx].type = 0;
 				aa[idx].ptr = cast(void*) arg;
-				aa[idx].length = arg.sizeof;
+				aa[idx].length = cast(uint)arg.sizeof;
 			} else static if(is(immutable typeof(arg) == immutable string)) {
 				aa[idx].type = 1;
 				aa[idx].ptr = arg.ptr;
-				aa[idx].length = arg.length;
+				aa[idx].length = cast(uint)arg.length;
 			} else static if(is(immutable typeof(arg) == immutable NativeHandle)) {
 				aa[idx].type = 2;
 				aa[idx].ptr = cast(void*) arg.handle;
-				aa[idx].length = NativeHandle.sizeof;
+				aa[idx].length = cast(uint)NativeHandle.sizeof;
 			} else static if(is(typeof(arg) : const float)) {
 				aa[idx].type = 3;
 				aa[idx].ptr = cast(void*) &arg;
-				aa[idx].length = arg.sizeof;
+				aa[idx].length = cast(uint)arg.sizeof;
 			} else static if(is(immutable typeof(arg) == immutable ubyte[])) {
 				aa[idx].type = 4;
 				aa[idx].ptr = arg.ptr;
-				aa[idx].length = arg.length;
+				aa[idx].length = cast(uint)arg.length;
 			/*
 			} else static if(is(typeof(arg) == delegate)) {
 				aa[idx].type = 5;

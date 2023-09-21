@@ -14,8 +14,8 @@ extern (C) immutable int _aaVersion = 1;
 import core.internal.hash;
 import core.arsd.memory_allocation;
 
-uint min(uint a, uint b) { return a < b ? a : b; }
-uint max(uint a, uint b) { return a > b ? a : b; }
+T min(T)(T a, T b) { return a < b ? a : b; }
+T max(T)(T a, T b) { return a > b ? a : b; }
 
 // grow threshold
 private enum GROW_NUM = 4;
@@ -338,13 +338,13 @@ private size_t nextpow2(const size_t n) pure nothrow @nogc
  * Returns:
  *      A new associative array.
  */
-extern (C) Impl* _aaNew(const TypeInfo_AssociativeArray ti)
+/+extern (C)+/ Impl* _aaNew(const TypeInfo_AssociativeArray ti)
 {
     return new Impl(ti);
 }
 
 /// Determine number of entries in associative array.
-extern (C) size_t _aaLen(scope const AA aa) pure nothrow @nogc
+/+extern (C)+/ size_t _aaLen(scope const AA aa) pure nothrow @nogc
 {
     return aa ? aa.length : 0;
 }

@@ -155,7 +155,7 @@ extern(C) void _d_assert_msg(string msg, string file, uint line) @trusted @nogc 
 
 void __switch_error(string file, size_t line) @trusted @nogc pure
 {
-	_d_assert_msg("final switch error",file, line);
+	_d_assert_msg("final switch error",file, cast(uint)line);
 }
 
 bool __equals(T1, T2)(scope T1[] lhs, scope T2[] rhs) {
@@ -1871,7 +1871,7 @@ immutable(T)[] idup(T)(scope const(T)[] array)
 	return result;
 }
 
-class Error { this(string msg) {} }
+class Error : Throwable { this(string msg) { super(msg); } }
 class Throwable : Object
 {
     interface TraceInfo
