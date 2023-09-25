@@ -1873,7 +1873,6 @@ immutable(T)[] idup(T)(scope const(T)[] array)
 	return result;
 }
 
-class Error : Throwable { this(string msg) { super(msg); } }
 class Throwable : Object
 {
     interface TraceInfo
@@ -2035,6 +2034,12 @@ class Throwable : Object
         return this.msg;
     }
 }
+class Error : Throwable {
+	@nogc @safe pure nothrow this(string msg,string file=__FILE__, size_t line = __LINE__, Throwable next = null) {
+		super(msg, file, line, next);
+	}
+}
+
 class Exception : Throwable
 {
 
