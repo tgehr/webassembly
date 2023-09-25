@@ -126,7 +126,10 @@ private bool growMemoryIfNeeded(size_t sz) @trusted {
 	return false;
 }
 
-void free(ubyte* ptr) @nogc @trusted {
+void free(void* ptr) @nogc @trusted pure nothrow{
+	return (cast(void function(void*)@nogc @trusted pure nothrow)&freeImpl)(ptr);
+}
+void freeImpl(void* ptr){
 	auto block = (cast(AllocatedBlock*) ptr) - 1;
 	if(!block.checkChecksum())
         assert(false, "Could not check block on free");
@@ -142,8 +145,8 @@ void free(ubyte* ptr) @nogc @trusted {
 }
 
 
-ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow{
-	return (cast(ubyte[] function(size_t sz, string file, size_t line)@trusted pure nothrow)&mallocImpl)(sz,file,line);
+ubyte[] malloc(size_t sz, string file = __FILE__, size_t line = __LINE__) @nogc @trusted pure nothrow{
+	return (cast(ubyte[] function(size_t sz, string file, size_t line)@nogc @trusted pure nothrow)&mallocImpl)(sz,file,line);
 }
 
 ubyte[] mallocImpl(size_t sz, string file = __FILE__, size_t line = __LINE__){
@@ -193,15 +196,15 @@ ubyte[] mallocImpl(size_t sz, string file = __FILE__, size_t line = __LINE__){
 }
 
 
-ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow
+ubyte[] calloc(size_t count, size_t size, string file = __FILE__, size_t line = __LINE__) @nogc @trusted pure nothrow
 {
 	auto ret = malloc(count*size,file,line);
 	ret[0..$] = 0;
 	return ret;
 }
 
-ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow {
-	return (cast(ubyte[] function(ubyte* ptr, size_t newSize, string file, size_t line)@trusted pure nothrow)&reallocImpl)(ptr,newSize,file,line);
+ubyte[] realloc(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @nogc @trusted pure nothrow {
+	return (cast(ubyte[] function(ubyte* ptr, size_t newSize, string file, size_t line)@nogc @trusted pure nothrow)&reallocImpl)(ptr,newSize,file,line);
 }
 ubyte[] reallocImpl(ubyte* ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted {
 	if(ptr is null)
@@ -251,8 +254,8 @@ ubyte[] reallocImpl(ubyte* ptr, size_t newSize, string file = __FILE__, size_t l
 *  If the ptr isn't owned by the runtime, it will completely malloc the data (instead of realloc)
 *   and copy its old content.
 */
-ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @trusted pure nothrow{
-	return (cast(ubyte[] function(ubyte[] ptr, size_t newSize, string file, size_t line)@trusted pure nothrow)&reallocImpl2)(ptr,newSize,file,line);
+ubyte[] realloc(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__) @nogc @trusted pure nothrow{
+	return (cast(ubyte[] function(ubyte[] ptr, size_t newSize, string file, size_t line)@nogc @trusted pure nothrow)&reallocImpl2)(ptr,newSize,file,line);
 }
 ubyte[] reallocImpl2(ubyte[] ptr, size_t newSize, string file = __FILE__, size_t line = __LINE__)
 {
