@@ -12,6 +12,7 @@ class B : A {
 }
 
 import std.stdio;
+//import util.io;
 
 void main() {
 	B b = new B;

@@ -14,7 +14,9 @@ alias noreturn = typeof(*null);
 alias string = immutable(char)[];
 alias wstring = immutable(wchar)[];
 alias dstring = immutable(dchar)[];
-alias size_t = ulong;
+
+alias size_t = typeof((void[]).init.length);
+
 alias ptrdiff_t = long;
 alias hash_t = size_t;
 

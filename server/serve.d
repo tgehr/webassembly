@@ -87,7 +87,7 @@ void handler(Cgi cgi) {
 	}
 
 	if(!exists("../" ~ path ~ ".wasm") || cgi.requestMethod == Cgi.RequestMethod.POST) {
-		auto res = executeShell("timeout -k 1s 1s ldc2 --revert=dtorfields --fvisibility=hidden -i=. -i=core -i=std -Iarsd-webassembly/ -L-allow-undefined -of"~path~".wasm -mtriple=wasm32-unknown-unknown-wasm "~path~".d arsd-webassembly/object.d",
+		auto res = executeShell("timeout -k 1s 1s ../../ldc2-1.32.0-linux-x86_64/bin/ldc2 --revert=dtorfields --fvisibility=hidden -i=. -i=core -i=std -Iarsd-webassembly/ -I./../wasm-stub -I../.. -L-allow-undefined -of"~path~".wasm -mtriple=wasm32-unknown-unknown-wasm "~path~".d arsd-webassembly/object.d --d-version=WASM",
 			null,
 			Config.none,
 			64_000,

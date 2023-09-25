@@ -338,15 +338,15 @@ private size_t nextpow2(const size_t n) pure nothrow @nogc
  * Returns:
  *      A new associative array.
  */
-/+extern (C)+/ Impl* _aaNew(const TypeInfo_AssociativeArray ti)
+extern (C) Impl* _aaNew(const TypeInfo_AssociativeArray ti)
 {
     return new Impl(ti);
 }
 
 /// Determine number of entries in associative array.
-/+extern (C)+/ size_t _aaLen(scope const AA aa) pure nothrow @nogc
+extern (C) size_t _aaLen(scope const void* aa) pure nothrow @nogc
 {
-    return aa ? aa.length : 0;
+    return aa ? (cast(AA)aa).length : 0;
 }
 
 /******************************
